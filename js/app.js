@@ -2,73 +2,126 @@ import Player from "./player.js"
 
 const App=(()=>{
 //Cache the dom
-let containerEl = document.querySelector(".container")
-let buttonStartEl = document.querySelector(".start-btn")
+let containerEl = document.querySelector(".container");
+let buttonStartEl = document.querySelector(".start-btn");
+let buttonResetEl= document.querySelector(".reset-btn");
+let bodyEl= document.querySelector("body")
+let inputPlayer1El = document.querySelector(".player-1");
+let inputPlayer2El = document.querySelector(".player-2");
+let score1El = document.querySelector(".score-1");
+let score2El = document.querySelector(".score-2");
+let texteGameEl= document.querySelector(".text-display")
 
 let board = ["", "", "", "", "", "", "", "", ""]
 let counter= 1
-let player1Result= []
-let player2Result=[]
+let isOver= false;
 // create player1 and 2
-const player1= new Player("sofian", "X")
-const player2= new Player("Leonor", "0")
-
-//find the index of the board array per player
+let player1;
+let player2;
 
 
 
-// Set the logic of start change and reset  the game
-const displayController =() => {
-
-}
-
-// Create a new gameboard
-const gameBoard = () => {
-let markup =""
-//Create the HTML markup
-for (let i in board){
-    markup+= `<div class="box"  id="${i}"></div>`
-}
-//Join it to the contakiner
-containerEl.innerHTML = markup;
-}
-gameBoard()
-
-//Add event listener and sign.
-const playing = () => {
-for (let i of containerEl.children){
-    i.addEventListener("click", function click(e){
-        //Player one playing
-    if(counter % 2 !== 0 && e.target.innerHTML === ""){
-        e.target.innerHTML = "X";
-        counter++
-        board.splice(i.id, 1, "X")
-        player1Result.push(parseInt(i.id))
-        if(winningComb() === 1) { player1.score++}
-        console.log(player1.score)
-        return 1
+const gameboard=_=> {
+    let markup="";
+    if(typeof player1 === "object" && typeof player2 === "object" ){
+        for(let i in board){
+            markup += `<div class="box" id="${i}"></div>`
+        } 
     }
-    //Player two playing
-    else if( counter % 2 === 0 && e.target.innerHTML === "") {
-        e.target.innerHTML = "0";
-        counter++
-        board.splice(i.id, 1, "0")
-        player2Result.push(parseInt(i.id))
-        if(winningComb() === 2) { player2.score++}
-        console.log(player2.score)
-    }
-    })
-  }
-
+   
+    containerEl.innerHTML = markup;
 }
-playing()
+
+//event listeners
+const listeners= _ =>{
+buttonStartEl.addEventListener("click", function(){
+    renderAll()
+})
+
+buttonResetEl.addEventListener("click", function(){
+    resetAll()
+})
+
+containerEl.addEventListener('click', function(e){
+    if(counter %2 !== 0 && e.target.innerHTML !== "0"){
+        e.target.innerHTML ="X";
+        board.splice(parseInt(e.target.id), 1, "X")
+        counter++
+        winningComb()
+        winner()
+    }else if(counter %2 === 0 && e.target.innerHTML !== "X"){
+        e.target.innerHTML ="0";
+        board.splice(parseInt(e.target.id), 1, "0")
+        counter ++
+        winningComb()
+        winner()
+    }
+})
+bodyEl.addEventListener("keypress", function(e){
+    if(e.key=== "Enter"){
+        let name1= inputPlayer1El.value;
+        player1 = new Player(name1, "X")
+        let name2= inputPlayer2El.value;
+        player2 = new Player(name2, "0")
+        renderAll()
+    }
+})
+}
 
 
+//return an array of results
+const boardToArray =(arr, sign) =>{
+    let resultP1 = [] 
+    let resultP2 = []
+    if(sign === "X"){
+        for (let i in arr){
+            if(arr[i] === sign) {
+                resultP1.push(parseInt(i))
+            }
+    }
+    }else if(sign ==="0"){
+            for (let i in arr){
+                if(arr[i] === sign) {
+                resultP2.push(parseInt(i))
+                }
+            }
+    }
+    return {
+        resultP1: resultP1,
+        resultP2: resultP2
+    }
+}
+
+const removeName=_=>{
+    inputPlayer1El.value = ""
+    inputPlayer2El.value = ""
+}
+
+//check if player is include 
 const isInclude = (a, b) => {
     const found = a.every(r => b.indexOf(r) >= 0)
     return found
 } 
 
+const resetAll =() =>{
+    board = ["", "", "", "", "", "", "", "", ""]
+    counter= 0;
+    isOver= false;
+    removeName()
+    renderAll();
+}
+const resetGame =() =>{
+    board = ["", "", "", "", "", "", "", "", ""]
+    counter= 0;
+    isOver= false;
+    renderAll();
+}
+
+const renderResultScore= () => {
+    score1El.innerHTML = player1.score;
+    score2El.innerHTML = player2.score;
+}
+// Check the winning combination
 const winningComb=() => {
 const winningCombination= [
     [0,1,2], 
@@ -81,13 +134,41 @@ const winningCombination= [
     [0,4,8]
 ]
     for(let i of winningCombination){
-        if(isInclude(i, player1Result)){
-         return 1
-        }else if (isInclude(i, player2Result)){
-            return 2
+        if(isInclude(i, boardToArray(board, "X").resultP1)){
+         player1.scoreAdd();
+         isOver = true;
+         texteGameEl.firstElementChild.innerHTML = player1.hasWon()
+        }else if (isInclude(i, boardToArray(board, "0").resultP2)){
+         player2.scoreAdd()
+         isOver = true;
+         texteGameEl.firstElementChild.innerHTML = player2.hasWon()
+        }else if(counter === board.length){
+            texteGameEl.firstElementChild.innerHTML = "it's a tie";
+        isOver = true;
         }
 }
 }
 
+const winner =_=>{
+    if(isOver){
+        resetGame()
+        renderAll()
+        renderResultScore()
+    }
+}
+
+
+const renderAll= _ =>{
+        gameboard()
+    }
+
+return {
+    listeners: listeners,
+    renderAll: renderAll
+}
+
 
 })();
+
+App.listeners();
+App.renderAll()

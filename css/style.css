@@ -7,14 +7,27 @@
 main{
     height: 100%;
     width: 100%;
-    display: grid;
-    place-content: center;
+    ;
+}
+
+header{
+    display: flex;
+}
+
+header button{
+    margin: 10px 30px;
+    padding: 10px 30px;
+}
+
+header input{
+    margin: 10px 30px;
+    padding: 10px 30px;
 }
 
 .container{
-    
     width: 300px;
     height: 300px;
+    margin: 0 auto;
     display: flex;
     flex-wrap: wrap;
 }
@@ -26,5 +39,10 @@ main{
     justify-content: center;
     align-items: center;
     border: 1px solid grey;
+}
+
+.text-display h2{
+    margin: 20px;
+    text-align: center;
 }
 
