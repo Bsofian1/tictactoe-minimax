@@ -13,9 +13,9 @@ let score2El = document.querySelector(".score-2");
 let texteGameEl= document.querySelector(".text-display")
 
 let board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-
-let counter= 1
+let counter= 1;
 let isOver= false;
+
 
 // create player1 and 2
 let player1;
@@ -45,19 +45,36 @@ buttonResetEl.addEventListener("click", function(){
 })
 
 containerEl.addEventListener('click', function(e){
-    if(counter %2 !== 0 && e.target.innerHTML !== "O"){
-        e.target.innerHTML ="X";
-        board.splice(parseInt(e.target.id), 1, "X")
-        counter++
-        winningComb()
-        winner()
-    }else if(counter %2 === 0 && e.target.innerHTML !== "X"){
-        e.target.innerHTML ="O";
-        board.splice(parseInt(e.target.id), 1, "O")
-        counter ++
-        winningComb()
-        winner()
+
+    if(player2.name == "Unbeatable robot"){
+        if(counter %2 !== 0 && e.target.innerHTML !== "O"){
+            e.target.innerHTML ="X";
+            board.splice(parseInt(e.target.id), 1, "X");
+            counter++;
+            winningComb();
+            let maxChance = minimax(board, "O");
+            board.splice(parseInt(maxChance.index), 1, "O");
+            document.getElementById(maxChance.index).innerHTML = "O";
+            counter++;
+            winningComb();
+        }
+        
+    }else{
+        if(counter %2 !== 0 && e.target.innerHTML !== "O"){
+            e.target.innerHTML ="X";
+            board.splice(parseInt(e.target.id), 1, "X")
+            counter++
+            winningComb()
+            winner()
+        }else if(counter %2 === 0 && e.target.innerHTML !== "X"){
+            e.target.innerHTML ="O";
+            board.splice(parseInt(e.target.id), 1, "O")
+            counter ++
+            winningComb()
+            winner()
+        }
     }
+   
 })
 bodyEl.addEventListener("keypress", function(e){
     if(e.key=== "Enter"){
@@ -113,15 +130,15 @@ const isInclude = (a, b) => {
 } 
 
 const resetAll =() =>{
-    board = ["", "", "", "", "", "", "", "", ""]
+    board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
     counter= 0;
     isOver= false;
     removeName()
     renderAll();
 }
 const resetGame =() =>{
-    board = ["", "", "", "", "", "", "", "", ""]
-    counter= 0;
+    board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
+    counter= 1;
     isOver= false;
     renderAll();
 }
@@ -130,6 +147,8 @@ const renderResultScore= () => {
     score1El.innerHTML = player1.score;
     score2El.innerHTML = player2.score;
 }
+
+
 // Check the winning combination
 const winningComb=() => {
 const winningCombination= [
@@ -147,14 +166,18 @@ const winningCombination= [
          player1.scoreAdd();
          isOver = true;
          texteGameEl.firstElementChild.innerHTML = player1.hasWon()
+         resetGame()
         }else if (isInclude(i, boardToArray(board, "O").resultP2)){
          player2.scoreAdd()
          isOver = true;
          texteGameEl.firstElementChild.innerHTML = player2.hasWon()
+         resetGame()
         }else if(counter === board.length){
         texteGameEl.firstElementChild.innerHTML = "it's a tie";
         isOver = true;
+        resetGame()
         }
+        renderResultScore()
 }
 }
 
@@ -172,9 +195,9 @@ const winner =_=>{
 var origBoard = ["O",1 ,"X","X",4 ,"O", 6 ,"X","O"];
 
 // human
-var player10 = "O";
+var player10 = "X";
 // ai
-var player20 = "X";
+var player20 = "O";
 
 
 // keep track of function calls
@@ -183,7 +206,7 @@ var fc = 0;
 // finding the ultimate play on the game that favors the computer
 
 
-var bestSpot = minimax(origBoard, player20);
+var bestSpot = minimax(origBoard, "O");
 
 //loging the results
 console.log("index: " + bestSpot.index);
@@ -225,7 +248,7 @@ function minimax(newBoard, player){
   if (minMaxWinning(newBoard, player10)){
      return {score:-10};
   }
-	else if (minMaxWinning(newBoard, player20)){
+	else if (minMaxWinning(newBoard, "O")){
     return {score:10};
 	}
   else if (availSpots.length === 0){
@@ -245,12 +268,12 @@ function minimax(newBoard, player){
     newBoard[availSpots[i]] = player;
 
     //if collect the score resulted from calling minimax on the opponent of the current player
-    if (player == player20){
+    if (player == "O"){
       var result = minimax(newBoard, player10);
       move.score = result.score;
     }
     else{
-      var result = minimax(newBoard, player20);
+      var result = minimax(newBoard, "O");
       move.score = result.score;
     }
 
@@ -263,7 +286,7 @@ function minimax(newBoard, player){
 
 // if it is the computer's turn loop over the moves and choose the move with the highest score
   var bestMove;
-  if(player === player20){
+  if(player === "O"){
     var bestScore = -10000;
     for(var i = 0; i < moves.length; i++){
       if(moves[i].score > bestScore){
