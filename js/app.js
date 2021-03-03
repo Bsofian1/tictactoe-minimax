@@ -12,9 +12,11 @@ let score1El = document.querySelector(".score-1");
 let score2El = document.querySelector(".score-2");
 let texteGameEl= document.querySelector(".text-display")
 
-let board = ["", "", "", "", "", "", "", "", ""]
+let board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
+
 let counter= 1
 let isOver= false;
+
 // create player1 and 2
 let player1;
 let player2;
@@ -43,15 +45,15 @@ buttonResetEl.addEventListener("click", function(){
 })
 
 containerEl.addEventListener('click', function(e){
-    if(counter %2 !== 0 && e.target.innerHTML !== "0"){
+    if(counter %2 !== 0 && e.target.innerHTML !== "O"){
         e.target.innerHTML ="X";
         board.splice(parseInt(e.target.id), 1, "X")
         counter++
         winningComb()
         winner()
     }else if(counter %2 === 0 && e.target.innerHTML !== "X"){
-        e.target.innerHTML ="0";
-        board.splice(parseInt(e.target.id), 1, "0")
+        e.target.innerHTML ="O";
+        board.splice(parseInt(e.target.id), 1, "O")
         counter ++
         winningComb()
         winner()
@@ -61,9 +63,16 @@ bodyEl.addEventListener("keypress", function(e){
     if(e.key=== "Enter"){
         let name1= inputPlayer1El.value;
         player1 = new Player(name1, "X")
+        if(inputPlayer2El.value === ""){
+        let name2= "Unbeatable robot"
+        player2 = new Player(name2, "O")
+        inputPlayer2El.value =  "Unbeatable robot";
+        }else {
         let name2= inputPlayer2El.value;
-        player2 = new Player(name2, "0")
+        player2 = new Player(name2, "O")
+        }
         renderAll()
+        texteGameEl.firstElementChild.innerHTML= `Let's start ${player1.name}, your move`
     }
 })
 }
@@ -79,7 +88,7 @@ const boardToArray =(arr, sign) =>{
                 resultP1.push(parseInt(i))
             }
     }
-    }else if(sign ==="0"){
+    }else if(sign ==="O"){
             for (let i in arr){
                 if(arr[i] === sign) {
                 resultP2.push(parseInt(i))
@@ -138,12 +147,12 @@ const winningCombination= [
          player1.scoreAdd();
          isOver = true;
          texteGameEl.firstElementChild.innerHTML = player1.hasWon()
-        }else if (isInclude(i, boardToArray(board, "0").resultP2)){
+        }else if (isInclude(i, boardToArray(board, "O").resultP2)){
          player2.scoreAdd()
          isOver = true;
          texteGameEl.firstElementChild.innerHTML = player2.hasWon()
         }else if(counter === board.length){
-            texteGameEl.firstElementChild.innerHTML = "it's a tie";
+        texteGameEl.firstElementChild.innerHTML = "it's a tie";
         isOver = true;
         }
 }
@@ -157,7 +166,126 @@ const winner =_=>{
     }
 }
 
+//
 
+// this is the uboard flattened and filled with some values to easier asses the Artificial Inteligence.
+var origBoard = ["O",1 ,"X","X",4 ,"O", 6 ,"X","O"];
+
+// human
+var player10 = "O";
+// ai
+var player20 = "X";
+
+
+// keep track of function calls
+var fc = 0;
+
+// finding the ultimate play on the game that favors the computer
+
+
+var bestSpot = minimax(origBoard, player20);
+
+//loging the results
+console.log("index: " + bestSpot.index);
+console.log("function calls: " + fc);
+
+// returns the available spots on the uboard
+function emptyIndexies(uboard){
+  return  uboard.filter(s => s != "O" && s != "X");
+}
+
+// winning combinations using the uboard indexies for instace the first win could be 3 xes in a row
+function minMaxWinning(uboard, player){
+ if (
+        (uboard[0] == player && uboard[1] == player && uboard[2] == player) ||
+        (uboard[3] == player && uboard[4] == player && uboard[5] == player) ||
+        (uboard[6] == player && uboard[7] == player && uboard[8] == player) ||
+        (uboard[0] == player && uboard[3] == player && uboard[6] == player) ||
+        (uboard[1] == player && uboard[4] == player && uboard[7] == player) ||
+        (uboard[2] == player && uboard[5] == player && uboard[8] == player) ||
+        (uboard[0] == player && uboard[4] == player && uboard[8] == player) ||
+        (uboard[2] == player && uboard[4] == player && uboard[6] == player)
+        ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// the main minimax function
+function minimax(newBoard, player){
+  
+  //keep track of function calls;
+  fc++;
+
+  //available spots
+  var availSpots = emptyIndexies(newBoard);
+
+  // checks for the terminal states such as win, lose, and tie and returning a value accordingly
+  if (minMaxWinning(newBoard, player10)){
+     return {score:-10};
+  }
+	else if (minMaxWinning(newBoard, player20)){
+    return {score:10};
+	}
+  else if (availSpots.length === 0){
+  	return {score:0};
+  }
+
+// an array to collect all the objects
+  var moves = [];
+
+  // loop through available spots
+  for (var i = 0; i < availSpots.length; i++){
+    //create an object for each and store the index of that spot that was stored as a number in the object's index key
+    var move = {};
+  	move.index = newBoard[availSpots[i]];
+
+    // set the empty spot to the current player
+    newBoard[availSpots[i]] = player;
+
+    //if collect the score resulted from calling minimax on the opponent of the current player
+    if (player == player20){
+      var result = minimax(newBoard, player10);
+      move.score = result.score;
+    }
+    else{
+      var result = minimax(newBoard, player20);
+      move.score = result.score;
+    }
+
+    //reset the spot to empty
+    newBoard[availSpots[i]] = move.index;
+
+    // push the object to the array
+    moves.push(move);
+  }
+
+// if it is the computer's turn loop over the moves and choose the move with the highest score
+  var bestMove;
+  if(player === player20){
+    var bestScore = -10000;
+    for(var i = 0; i < moves.length; i++){
+      if(moves[i].score > bestScore){
+        bestScore = moves[i].score;
+        bestMove = i;
+      }
+    }
+  }else{
+
+// else loop over the moves and choose the move with the lowest score
+    var bestScore = 10000;
+    for(var i = 0; i < moves.length; i++){
+      if(moves[i].score < bestScore){
+        bestScore = moves[i].score;
+        bestMove = i;
+      }
+    }
+  }
+
+// return the chosen move (object) from the array to the higher depth
+  return moves[bestMove];
+}
 const renderAll= _ =>{
         gameboard()
     }
