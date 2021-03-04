@@ -3,7 +3,7 @@ import Player from "./player.js"
 const App=(()=>{
 //Cache the dom
 let containerEl = document.querySelector(".container");
-let buttonStartEl = document.querySelector(".start-btn");
+
 let buttonResetEl= document.querySelector(".reset-btn");
 let bodyEl= document.querySelector("body")
 let inputPlayer1El = document.querySelector(".player-1");
@@ -14,8 +14,10 @@ let texteGameEl= document.querySelector(".text-display")
 
 let board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
 let counter= 1;
+let playersTurn = 0
 let isOver= false;
-
+// Return a random number between 500 and 1500
+let delayInMilliseconds = Math.floor(Math.random() * 1000) + 500;
 
 // create player1 and 2
 let player1;
@@ -32,31 +34,39 @@ const gameboard=_=> {
     }
    
     containerEl.innerHTML = markup;
+    highLight()
 }
 
 //event listeners
 const listeners= _ =>{
-buttonStartEl.addEventListener("click", function(){
-    renderAll()
-})
 
 buttonResetEl.addEventListener("click", function(){
     resetAll()
 })
 
 containerEl.addEventListener('click', function(e){
-
+console.log()
     if(player2.name == "Unbeatable robot"){
         if(counter %2 !== 0 && e.target.innerHTML !== "O"){
             e.target.innerHTML ="X";
             board.splice(parseInt(e.target.id), 1, "X");
             counter++;
             winningComb();
+
+            let maxChance = minimax(board, "O");
+            // Illusion that the computer think
+            setTimeout(function() {
+                board.splice(parseInt(maxChance.index), 1, "O");
+                document.getElementById(maxChance.index).innerHTML = "O";
+                counter++;
+                winningComb();
+              }, delayInMilliseconds)
+        }else if(counter %2 === 0 && e.target.innerHTML !== "O"){
             let maxChance = minimax(board, "O");
             board.splice(parseInt(maxChance.index), 1, "O");
-            document.getElementById(maxChance.index).innerHTML = "O";
-            counter++;
-            winningComb();
+                document.getElementById(maxChance.index).innerHTML = "O";
+                counter++;
+                winningComb();
         }
         
     }else{
@@ -94,6 +104,16 @@ bodyEl.addEventListener("keypress", function(e){
 })
 }
 
+//Highlight the players name when turn
+const highLight= () =>{
+    if(playersTurn === 0){
+        inputPlayer1El.setAttribute("class", "turn")
+        inputPlayer2El.removeAttribute("class", "turn")
+    }else if(playersTurn === 1){
+        inputPlayer1El.removeAttribute("class", "turn")
+        inputPlayer2El.setAttribute("class", "turn")
+}
+}
 
 //return an array of results
 const boardToArray =(arr, sign) =>{
@@ -118,6 +138,8 @@ const boardToArray =(arr, sign) =>{
     }
 }
 
+
+
 const removeName=_=>{
     inputPlayer1El.value = ""
     inputPlayer2El.value = ""
@@ -130,15 +152,24 @@ const isInclude = (a, b) => {
 } 
 
 const resetAll =() =>{
-    board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-    counter= 0;
-    isOver= false;
-    removeName()
-    renderAll();
+    resetGame();
+    resetScore();
+    player2.reset();
+    player1.reset();
+    removeName();
+    texteGameEl.firstElementChild.innerHTML= 'Enter your name and press "Enter"';
 }
 const resetGame =() =>{
-    board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-    counter= 1;
+    board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"];
+    
+    // defining next round turn
+    if(playersTurn === 1){
+        counter = 1;
+        playersTurn= 0;
+    }else if(playersTurn === 0){
+        counter = 0;
+        playersTurn= 1;
+    }
     isOver= false;
     renderAll();
 }
@@ -148,6 +179,10 @@ const renderResultScore= () => {
     score2El.innerHTML = player2.score;
 }
 
+const resetScore = () => {
+    score1El.innerHTML = 0;
+    score2El.innerHTML = 0;
+}
 
 // Check the winning combination
 const winningComb=() => {
@@ -166,11 +201,13 @@ const winningCombination= [
          player1.scoreAdd();
          isOver = true;
          texteGameEl.firstElementChild.innerHTML = player1.hasWon()
+         
          resetGame()
         }else if (isInclude(i, boardToArray(board, "O").resultP2)){
          player2.scoreAdd()
          isOver = true;
          texteGameEl.firstElementChild.innerHTML = player2.hasWon()
+         
          resetGame()
         }else if(counter === board.length){
         texteGameEl.firstElementChild.innerHTML = "it's a tie";
@@ -311,6 +348,7 @@ function minimax(newBoard, player){
 }
 const renderAll= _ =>{
         gameboard()
+        
     }
 
 return {

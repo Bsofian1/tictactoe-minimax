@@ -18,11 +18,18 @@ header{
 header button{
     margin: 10px 30px;
     padding: 10px 30px;
+    background-color: white;
+    border-radius: 5px;;
+    border: solid 1px gray;
 }
 
 header input{
     margin: 10px 30px;
     padding: 10px 30px;
+}
+
+header .turn{
+    border-color: green;
 }
 
 .container{
